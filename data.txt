@@ -1,0 +1,5 @@
+Dataset is too large to be included in this repository.
+Please download it from the following link and extract it into the "data/" folder:
+
+📌 Google Drive link: https://drive.google.com/drive/folders/18-E7KwM1fXGhVAEOqh7nIWG1BjPrIqaI?usp=drive_link
+

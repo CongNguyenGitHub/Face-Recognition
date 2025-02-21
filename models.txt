@@ -1,0 +1,6 @@
+📌 Model files are too large for GitHub. Please download them from the following links:
+
+🔗 Siamese Model: https://drive.google.com/file/d/104MFUlhR9wq1dnpHajQy5B_FPOMorSkT/view?usp=drive_link
+🔗 YOLO Model: https://drive.google.com/file/d/1AKIz-sf9wskBuw5parDzeMww9ttpmoAr/view?usp=drive_link
+
+After downloading, place them in the "models/" folder.
