@@ -1,0 +1,7 @@
+streamlit
+torch
+torchvision
+numpy
+Pillow
+facenet-pytorch
+pickle-mixin
