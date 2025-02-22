@@ -8,25 +8,21 @@ import torch
 import os
 import numpy as np
 import pickle
-import time
-
 import pathlib
 from pathlib import Path
-pathlib.PosixPath = pathlib.WindowsPath
 
+pathlib.PosixPath = pathlib.WindowsPath
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-def face_detection(image,model):
+def face_detection(image, model):
     results = model(image)
-
     predictions = results.pandas().xyxy[0]
     if predictions.empty:
         return None
-
     top_prediction = predictions.loc[predictions['confidence'].idxmax()]
-    x_min, y_min, x_max, y_max = int(top_prediction['xmin']), int(top_prediction['ymin']), int(top_prediction['xmax']), int(top_prediction['ymax'])
-    return image.crop((x_min,y_min,x_max,y_max))
+    x_min, y_min, x_max, y_max = map(int, [top_prediction['xmin'], top_prediction['ymin'], top_prediction['xmax'], top_prediction['ymax']])
+    return image.crop((x_min, y_min, x_max, y_max))
 
 class FaceDetectionTransform:
     def __init__(self, model):
@@ -37,19 +33,17 @@ class FaceDetectionTransform:
         return cropped_image if cropped_image is not None else image
 
 @st.cache_resource
-def load_detector(path="../yolov5n/kaggle/working/model/weights/best.pt"):
+def load_detector(path="../models/yolo_model/weights/best.pt"):
     detector = torch.hub.load("ultralytics/yolov5", "custom", path=path)
     return detector
 
 def transform_image(detector):
-    image_size = (160, 160)
-    transform_YOLO = transforms.Compose([
+    return transforms.Compose([
         FaceDetectionTransform(detector),
-        transforms.Resize(image_size),
+        transforms.Resize((160, 160)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
-    return transform_YOLO
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -59,7 +53,6 @@ class SiameseNetwork(nn.Module):
         self.base_model = InceptionResnetV1(pretrained="vggface2")
         for param in self.base_model.parameters():
             param.requires_grad = False
-
         self.dropout = nn.Dropout(dropout_rate)
         self.fc = nn.Linear(512, 1)
 
@@ -68,77 +61,66 @@ class SiameseNetwork(nn.Module):
         embedding2 = self.base_model(input2)
         distance = torch.abs(embedding1 - embedding2)
         distance = self.dropout(distance)
-        output = self.fc(distance)
-        return output
+        return self.fc(distance)
 
 @st.cache_resource
 def load_model(path_to_checkpoint, device, dropout_rate=0.75):
     model = SiameseNetwork(dropout_rate=dropout_rate)
-    model.load_state_dict(torch.load(path_to_checkpoint, map_location=device, weights_only=True))
+    model.load_state_dict(torch.load(path_to_checkpoint, map_location=device))
     return model
 
 def extract_feature(model, path_to_img, transform, device):
     model.eval()
     model.to(device)
-
     img = Image.open(path_to_img).convert("RGB")
-    img_tensor = transform(img)
-    img_tensor = img_tensor.unsqueeze(0)
-    feature = model.base_model(img_tensor)
-    return feature
+    img_tensor = transform(img).unsqueeze(0)
+    return model.base_model(img_tensor)
 
-def load_databases(path_to_features="./feature_databases.npy", path_to_names="./name_databases.pkl"):
-    feature_databases = np.load(path_to_features)
-
-    name_databases = None
-    with open(path_to_names, "rb") as file:
+def load_databases():
+    feature_databases = np.load("./feature_databases.npy")
+    with open("./name_databases.pkl", "rb") as file:
         name_databases = pickle.load(file)
-    feature_databases = torch.from_numpy(feature_databases)
-    return feature_databases, name_databases
+    return torch.from_numpy(feature_databases), name_databases
+
+def save_database(feature_databases, name_databases):
+    np.save("./feature_databases.npy", feature_databases.numpy())
+    with open("./name_databases.pkl", "wb") as file:
+        pickle.dump(name_databases, file)
 
 folder_images = "./images/"
 os.makedirs(folder_images, exist_ok=True)
 
-uploaded_file = st.file_uploader("Upload file", type=["jpg", "jpeg", "png"])
-theshold = 0.62
+detector = load_detector()
+transform_YOLO = transform_image(detector)
+model = load_model("../models/siamese_model/weights/best_model.pt", device, dropout_rate=0.5)
+features_databases, name_databases = load_databases()
+
+st.title("Face Recognition & Database Management")
+
+option = st.radio("Choose an option", ["Add to Database", "Recognize Face"])
+
+uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    features_databases, name_databases = load_databases()
-    model = load_model(path_to_checkpoint="../Nguyen/5/kaggle/working/model_5/best_model.pt", device=device, dropout_rate=0.5)
-    detector = load_detector()
-    transform_YOLO = transform_image(detector)
-
     file_path = os.path.join(folder_images, uploaded_file.name)
     with open(file_path, "wb") as f:
         f.write(uploaded_file.getbuffer())
-
-    start_time = time.time()
+    
     new_feature = extract_feature(model, file_path, transform_YOLO, device)
-    distance = torch.abs(new_feature - features_databases)
-    output = model.fc(distance)
-    results = torch.sigmoid(output)
-
-    index_label = torch.argmax(results).item()
-
-    pred_label = "Unknown"
-    max_predict = results[index_label]
-    if max_predict >= theshold:
-        pred_label = name_databases[index_label]
-
-    img = Image.open(uploaded_file)
-    end_time = time.time()
-    total_time = end_time-start_time
-    column_1, column_2 = st.columns(2)
-    with column_1:
-        st.image(img)
-
-    with column_2:
-        st.markdown(
-            f"""
-            <div style="text-align: center; font-size: 30px; margin-top: 150px">
-                {pred_label} ({total_time:.4f} s)
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
+    
+    if option == "Add to Database":
+        label_input = st.text_input("Enter label:")
+        if label_input:
+            features_databases = torch.cat((features_databases, new_feature), dim=0)
+            name_databases.append(label_input)
+            save_database(features_databases, name_databases)
+            st.success(f"Added {label_input} to database!")
+    
+    elif option == "Recognize Face":
+        distance = torch.abs(new_feature - features_databases)
+        output = model.fc(distance)
+        results = torch.sigmoid(output)
+        index_label = torch.argmax(results).item()
+        pred_label = name_databases[index_label] if results[index_label] >= 0.62 else "Unknown"
+        st.image(Image.open(uploaded_file))
+        st.markdown(f"### Recognized: {pred_label}")

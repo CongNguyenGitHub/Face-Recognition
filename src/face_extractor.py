@@ -55,7 +55,7 @@ class FaceDetectionTransform:
         return cropped_image if cropped_image is not None else image
 
 
-detector = torch.hub.load("ultralytics/yolov5", "custom", path="../yolov5n/kaggle/working/model/weights/best.pt")
+detector = torch.hub.load("ultralytics/yolov5", "custom", path="../models/yolo_model/weights/best.pt")
 
 image_size = (160, 160)
 transform_YOLO = transforms.Compose([
@@ -112,7 +112,7 @@ image_databases = [
     "Hugh Jackman/Hugh Jackman_074.jpg",
     "Denzel Washington/Denzel Washington_079.jpg",
     "Scarlett Johansson/Scarlett Johansson_149.jpg",
-    'Leonardo DiCaprio/Leonardo DiCaprio_007.jpg',
+    "Leonardo DiCaprio/Leonardo DiCaprio_007.jpg",
     "Brad Pitt/Brad Pitt_004.jpg",
     "Sandra Bullock/Sandra Bullock_055.jpg",
     "Kate Winslet/Kate Winslet_002.jpg",
@@ -134,10 +134,11 @@ def get_databases(model, transform, image_databases, device):
     feature_databases = torch.vstack(feature_databases)
     return feature_databases, name_databases
 
-model = load_model(path_to_checkpoint="../Nguyen/5/kaggle/working/model_5/best_model.pt", device=device, dropout_rate=0.5)
+model = load_model(path_to_checkpoint="../models/siamese_model/weights/best_model.pt", device=device, dropout_rate=0.5)
 feature_databases, name_databases = get_databases(model, transform_YOLO, image_databases, device)
 
 with open("./name_databases.pkl", "wb") as file:
     pickle.dump(name_databases, file)
 
 np.save("./feature_databases.npy", feature_databases)
+
