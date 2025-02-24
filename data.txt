@@ -1,5 +1,7 @@
-Dataset is too large to be included in this repository.
-Please download it from the following link and extract it into the "data/" folder:
+📌 Dataset are too large for GitHub. Please download them from the following links:
 
-📌 Google Drive link: https://drive.google.com/drive/folders/18-E7KwM1fXGhVAEOqh7nIWG1BjPrIqaI?usp=drive_link
+🔗 lfw-py : https://drive.google.com/drive/folders/1Wcb_2kId62HiXp5kC77kOQ7xMDYjVnG4?usp=sharing
+🔗 Celebrity Faces Dataset: https://drive.google.com/drive/folders/1jn1MI7p-LLbSsiEpOMiMn3lDVs92vZx5?usp=sharing
+🔗 Face-Detection-Dataset: https://drive.google.com/file/d/1CE2Eesoo8wpQ90bRETNbGhtXV5r8KKHG/view?usp=sharing
 
+After downloading, unzip the files and place them in the "data/" folder.
