@@ -13,6 +13,7 @@ This project implements a **face recognition system** using **Siamese Networks**
 ├── models.txt        # Links to the trained Siamese model & YOLO model
 ├── requirements.txt  # Required dependencies
 ├── README.md         # Project documentation (this file)
+├── images/           # Contains images for documentation
 ```
 
 ## 🚀 Features
@@ -20,6 +21,11 @@ This project implements a **face recognition system** using **Siamese Networks**
 - **Face Extraction** using a **YOLO-based model**
 - **Pretrained models provided** for quick deployment
 - **Streamlit-based UI** for easy interaction & testing
+
+## 🖥️ Demo Interface Preview
+Below is the demo interface of the **Face Recognition System**, where users can upload an image and get recognition results.
+
+![Face Recognition Demo](interface.png)
 
 ## 🛠 Setup Instructions
 ### 1️⃣ Install Dependencies
@@ -46,17 +52,18 @@ streamlit run app.py
 ### ✅ YOLO Face Extractor
 - **Model:** YOLOv5
 - **Purpose:** Extracts faces from images before recognition
-- **Training Data:** Face-Detection-Dataset 
+- **Training Data:** Face-Detection-Dataset
 
 ## 📜 Report & Slides
 For a detailed explanation, refer to the **report/** directory.
 
 ## 🤝 Contributors
 - **Nguyen Cong Nguyen**  
-- **Le Tien Quyet** 
+- **Le Tien Quyet**
 
 ## 📧 Contact
 For any inquiries, reach out via GitHub Issues or email.
 
 ---
 **⭐ If you find this project useful, give it a star! ⭐**
+
